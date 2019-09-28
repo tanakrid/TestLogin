@@ -15,9 +15,9 @@ class ApplyEmployeePage : AppCompatActivity() {
 
         submitBtn.setOnClickListener {
             val database = FirebaseDatabase.getInstance()
-            val myRef = database.getReference("message")
+            val myRef = database.getReference("message1")
 
-            myRef.setValue("Hello, World!")
+            myRef.setValue("Hello, World!1")
         }
         backBtn.setOnClickListener { startActivity(Intent(this@ApplyEmployeePage, Result::class.java)) }
         cancelBtn.setOnClickListener { startActivity(Intent(this@ApplyEmployeePage, Result::class.java)) }

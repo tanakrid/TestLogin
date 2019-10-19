@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
+import com.example.testlogin.model.ProfileShop
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import kotlinx.android.synthetic.main.activity_profile_manager.*
@@ -15,12 +16,12 @@ class ProfileManager : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_profile_manager)
 
-        if (!intent.getBooleanExtra("isManager", false)){
+        if (!ProfileShop.isManager){
             Toast.makeText(baseContext,"Failed to access manager profile.",Toast.LENGTH_SHORT).show()
             startActivity(Intent(this@ProfileManager, Result::class.java))
         }
 
-        nameShop.text = intent.getStringExtra("NameShop")
+        nameShop.text = ProfileShop.nameShop
 
         editPassBtn.setOnClickListener { startActivity(Intent(this@ProfileManager, EditPasswordPage::class.java)) }
         delEmployeeBtn.setOnClickListener { startActivity(Intent(this@ProfileManager, DeleteEmployeePage::class.java))  }

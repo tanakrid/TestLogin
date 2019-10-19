@@ -10,14 +10,12 @@ import kotlinx.android.synthetic.main.activity_sign_up.*
 
 class SignUp : AppCompatActivity() {
 
-    var mAuth: FirebaseAuth? = null
+    private val mAuth = FirebaseAuth.getInstance()
     private val Tag: String = "Register Activity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_sign_up)
-
-        mAuth = FirebaseAuth.getInstance()
 
         if (mAuth!!.currentUser != null){
             startActivity(Intent(this@SignUp, Result::class.java))
@@ -29,7 +27,6 @@ class SignUp : AppCompatActivity() {
             val password = editTextPass.text.toString().trim{ it <= ' '}
 
             if(email.isEmpty()){
-//                toast("Please enter your email address.")
                 Log.d(Tag, "Email was empty!")
                 return@setOnClickListener
             }
@@ -38,7 +35,7 @@ class SignUp : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            mAuth!!.createUserWithEmailAndPassword(email, password).addOnCompleteListener { task ->
+            mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener { task ->
                 if (!task.isSuccessful){
                     if (password.length < 6){
                         editTextPass.error = "Please check your password. Password must have minimum 6 characters."

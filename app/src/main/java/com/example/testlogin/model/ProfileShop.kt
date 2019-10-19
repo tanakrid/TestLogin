@@ -18,4 +18,11 @@ class ProfileShop (
             "NameShop" to NameShop
         )
     }
+
+    companion object{
+        var emailManager: String = ""
+        var IdShop: String = ""
+        var nameShop: String = ""
+        var isManager:Boolean = false
+    }
 }

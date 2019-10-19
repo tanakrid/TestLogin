@@ -6,6 +6,8 @@ import android.os.Bundle
 import android.util.Log
 import android.view.KeyEvent
 import android.widget.Toast
+import com.example.testlogin.model.Employee
+import com.example.testlogin.model.ProfileShop
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -13,25 +15,20 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import kotlinx.android.synthetic.main.activity_result.*
 
-val emailManager:String? = null
 class Result : AppCompatActivity() {
 
-    var mAuth: FirebaseAuth? = null
-    var mAuthListener: FirebaseAuth.AuthStateListener? = null
-    private val TAG:String = "Result Activity"
-    var isManager: Boolean? = null
+    private var mAuth = FirebaseAuth.getInstance()
+    private var mAuthListener: FirebaseAuth.AuthStateListener? = null
+    private val database = FirebaseDatabase.getInstance().reference
+        .child("store").child(ProfileShop.IdShop).child("EmployeeList")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_result)
 
-        mAuth = FirebaseAuth.getInstance()
-
         val user = mAuth!!.currentUser
-
         emailData.text = user!!.email
         UID.text = user.uid
-
         mAuthListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
             val users = firebaseAuth.currentUser
             if (users == null){
@@ -42,48 +39,59 @@ class Result : AppCompatActivity() {
 
         signOutBtn.setOnClickListener {
             mAuth!!.signOut()
-            Log.d(TAG, "Signed out!")
+            clearStateAfterLogout()
             startActivity(Intent(this@Result, MainActivity::class.java))
             finish()
         }
 
-        // will check permission manager and send some profile to display in profileManagerActivity
-        goToManager()
+        managerBtn.setOnClickListener {
 
-        employeeBtn.setOnClickListener { startActivity(Intent(this@Result, ApplyEmployeePage::class.java)) }
+            if(ProfileShop.isManager){
+                startActivity(Intent(this@Result, ProfileManager::class.java))
+            }else{
+                Toast.makeText(baseContext, "Failed to access.",
+                    Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        employeeBtn.setOnClickListener {
+            isNormalUser()
+        }
     }
 
-    fun goToManager(){
+    private fun clearStateAfterLogout(){
+        ProfileShop.emailManager = ""
+        ProfileShop.isManager = false
+        ProfileShop.IdShop = ""
+        ProfileShop.nameShop = ""
+        Employee.isEmployee = false
+    }
 
-        var shopReference = FirebaseDatabase.getInstance().reference
-        val currentUser = FirebaseAuth.getInstance().currentUser
-        var nameShop:String? = null
-
-        val shopListener = object : ValueEventListener {
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                managerBtn.setOnClickListener {
-                    var currentUserEmail = currentUser!!.email.toString()
-                    Log.d(TAG, "currentUserEmail : ${currentUserEmail}")
-                    nameShop = dataSnapshot.child("NameShop").value.toString()
-                    Log.d(TAG, "nameShop : ${nameShop}")
-                    startActivity(
-                        Intent(this@Result, ProfileManager::class.java)
-                            .putExtra(
-                            "isManager", dataSnapshot.child("EmailManager").value.toString() == currentUserEmail)
-                            .putExtra("NameShop", nameShop)
-                    )
-                }
+    private fun isNormalUser(){
+        val shopListener = object: ValueEventListener{
+            override fun onCancelled(p0: DatabaseError) {
+                Toast.makeText(baseContext, "Failed to access.",
+                    Toast.LENGTH_SHORT).show()
             }
 
-            override fun onCancelled(databaseError: DatabaseError) {
-                managerBtn.setOnClickListener {
-                    Log.w(TAG, "loadPost:onCancelled", databaseError.toException())
-                    Toast.makeText(baseContext, "Failed to access.",
+            override fun onDataChange(p0: DataSnapshot) {
+                for(child in p0.children){
+                    if(child.child("email").value.toString() == mAuth.currentUser?.email){
+                        Employee.isEmployee = true
+                        break
+                    }
+                }
+
+                Log.w("user", ""+Employee.isEmployee)
+                if (!(Employee.isEmployee || ProfileShop.isManager)) {
+                    startActivity(Intent(this@Result, ApplyEmployeePage::class.java))
+                }else{
+                    Toast.makeText(baseContext, "You was applied.",
                         Toast.LENGTH_SHORT).show()
                 }
             }
         }
-        shopReference.addListenerForSingleValueEvent(shopListener)
+        database.addValueEventListener(shopListener)
     }
 
     override fun onStart() {
